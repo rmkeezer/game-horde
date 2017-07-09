@@ -1,23 +1,25 @@
 
 var refreshSortable = function() {
-    $(".todo-list").sortable({
+    $(".connectedSortable").sortable({
         placeholder: "sort-highlight",
-        handle: ".handle",
+        connectWith: ".connectedSortable",
+        handle: ".box-header",
         forcePlaceholderSize: true,
         zIndex: 999999
     });
+    $('.connectedSortable .box-header, .connectedSortable').css('cursor', 'move');
 }
 refreshSortable();
 
 var formatCards = function(data, num) {
-    out = '<ul class="todo-list card-list ui-sortable">';
+    out = '<ul class="col-lg-6 connectedSortable">';
     items = data.Items;
     for (var i=0; i<num; i++) {
-        start = '<li class="card-holder"><div class="info-box handle ui-sortable-handle card">';
+        start = '<div class="box">';
         icon = '<img class="card-image" src="' + items[i][8] + '">';
         //icon = '<img src="' + items[i][8] + '">'
         mask = '<div class="card-mask"></div>'
-        body = '<div class="card-content">'
+        body = '<div class="card-content box-header">'
             + '<a class="card-title" href="#">' + items[i][1] + '</a>'
             + '<div class="card-text">' + items[i][18] + '</div>'
             + '</div>';
@@ -28,10 +30,10 @@ var formatCards = function(data, num) {
                         + '<div class="card-meta-text" href="' + items[i][17] + '">' + items[i][16] + '</div>'
                         + '</div>';
         }
-        end = '</div></li>';
+        end = '</div>';
         out += start + icon + mask + body + metacritic + end;
     }
-    out += '</ul>';
+    out += '';
     return out;
 }
 

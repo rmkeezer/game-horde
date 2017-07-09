@@ -133,12 +133,21 @@
     </section>
 
     <!-- Main content -->
-    <section class="content container-fluid" id="content">
-
-      <ul class="todo-list ui-sortable">
-        <li><div class="info-box handle ui-sortable-handle"></div></li>
-        <li><div class="info-box handle ui-sortable-handle"></div></li>
-      </ul>
+    <section class="content">
+      <div class="row" id="content">
+        <section class="col-lg-6 connectedSortable">
+          <div class="box">
+            <div class="box-header">
+            </div>
+          </div>
+        </section>
+        <section class="col-lg-6 connectedSortable">
+          <div class="box">
+            <div class="box-header">
+            </div>
+          </div>
+        </section>
+      </div>
 
     </section>
     <!-- /.content -->
@@ -232,10 +241,10 @@
 <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 <!-- AdminLTE App -->
 <script src="dist/js/adminlte.min.js"></script>
-<!-- JS entrypoint -->
-
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<script src='main.js'></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
+<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+<script src="main.js"></script>
 
 </body>
 </html>
