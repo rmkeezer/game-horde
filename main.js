@@ -18,10 +18,8 @@ var cutData = function(data, start) {
     }
 }
 
-var createSection = function(id, name) {
-    out = '<div class="col-lg-6 connectedSortable" id="' + id + '">';
-    out += '<h1>' + name + '</h1>'
-    out += '<div class="sk-circle">\
+var loadingCircle = function() {
+    return '<div class="sk-circle">\
                 <div class="sk-circle1 sk-child"></div>\
                 <div class="sk-circle2 sk-child"></div>\
                 <div class="sk-circle3 sk-child"></div>\
@@ -35,13 +33,25 @@ var createSection = function(id, name) {
                 <div class="sk-circle11 sk-child"></div>\
                 <div class="sk-circle12 sk-child"></div>\
             </div>'
+}
+
+var createSection = function(id, name) {
+    out = '<div class="col-lg-6">'
+    out += '<h1>' + name + '</h1>'
+    out += '<div class="connectedSortable" id="' + id + '">';
+    out += loadingCircle();
     out += '</div>';
+    out += '<div class="centered">'
+    out += '<a class="button" id="prev' + id + '">Prev</a>'
+    out += '<a class="button" id="next' + id + '">Next</a>'
+    out += '</div>'
+    out += '</div>'
     return out;
 }
 
 var formatCards = function(data, name) {
     items = data.Items;
-    out = '<h1>' + name + '</h1>';
+    out = '';
     for (var i=0; i<items.length; i++) {
         start = '<div class="box">';
         icon = '<img class="card-image" src="' + items[i][8] + '">';
@@ -62,6 +72,63 @@ var formatCards = function(data, name) {
         out += start + icon + mask + body + metacritic + end;
     }
     return out;
+}
+
+var createPage = function(data, start, end, id, name, pageListener) {
+    cutData(data, 2);
+    out = formatCards(data, name);
+    $("#" + id).html(out);
+    refreshSortable(id);
+    $("#next" + id).unbind('click');
+    $("#next" + id).click(function(e) {
+        $("#" + id).html(loadingCircle());
+        pageListener(start + end, end, id, name);
+    });
+    $("#prev" + id).unbind('click');
+    $("#prev" + id).click(function(e) {
+        $("#" + id).html(loadingCircle());
+        pageListener(start - end, end, id, name);
+    });
+}
+
+var getOtherGames = function(start, end, id, name) {
+    $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
+        email: 'rmkeezer@yahoo.com',
+        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
+        table1: 'usergames',
+        table2: 'games',
+        join1: 'game_id',
+        join2: 'Id',
+        joinType: 'RIGHT',
+        null: 'user_id',
+        neg: '',
+        offset: start.toString(),
+        numRows: end.toString(),
+        order: 'metacritic',
+        dir: 'DESC'
+    }, function(data) {
+        createPage(data, start, end, id, name, getOtherGames);
+    });
+}
+
+var getMyGames = function(start, end, id, name) {
+    $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
+        email: 'rmkeezer@yahoo.com',
+        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
+        table1: 'usergames',
+        table2: 'games',
+        join1: 'game_id',
+        join2: 'Id',
+        joinType: 'INNER',
+        null: 'user_id',
+        neg: 'NOT',
+        offset: start.toString(),
+        numRows: end.toString(),
+        order: 'metacritic',
+        dir: 'DESC'
+    }, function(data) {
+        createPage(data, start, end, id, name, getMyGames);
+    });
 }
 
 $("#Dashboard").click(function(e) {
@@ -85,50 +152,13 @@ $("#Library").click(function(e) {
     var sec2Id = 'other'
     var sec1 = createSection(sec1Id, 'My Games');
     var sec2 = createSection(sec2Id, 'Other Games');
+
     
     $("#content").html(sec1 + sec2);
 
-    $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
-        email: 'rmkeezer@yahoo.com',
-        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
-        table1: 'usergames',
-        table2: 'games',
-        join1: 'game_id',
-        join2: 'Id',
-        joinType: 'INNER',
-        null: 'user_id',
-        neg: 'NOT',
-        offset: '0',
-        numRows: '10',
-        order: 'metacritic',
-        dir: 'DESC'
-    }, function(data) {
-        cutData(data, 2);
-        out = formatCards(data, 'My Games');
-        $("#" + sec1Id).html(out);
-        refreshSortable(sec1Id);
-    });
+    getMyGames(0, 10, sec1Id, 'My Games');
 
-    $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
-        email: 'rmkeezer@yahoo.com',
-        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
-        table1: 'usergames',
-        table2: 'games',
-        join1: 'game_id',
-        join2: 'Id',
-        joinType: 'RIGHT',
-        null: 'user_id',
-        neg: '',
-        offset: '0',
-        numRows: '10',
-        order: 'metacritic',
-        dir: 'DESC'
-    }, function(data) {
-        cutData(data, 2);
-        out = formatCards(data, 'Other Games');
-        $("#" + sec2Id).html(out);
-        refreshSortable(sec2Id);
-    });
+    getOtherGames(0, 10, sec2Id, 'Other Games');
 });
 
 $("#Games").click(function(e) {
