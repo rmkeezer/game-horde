@@ -1,5 +1,5 @@
 
-var refreshSortable = function() {
+var refreshSortable = function(id) {
     $(".connectedSortable").sortable({
         placeholder: "sort-highlight",
         connectWith: ".connectedSortable",
@@ -7,13 +7,41 @@ var refreshSortable = function() {
         forcePlaceholderSize: true,
         zIndex: 999999
     });
-    $('.connectedSortable .box-header, .connectedSortable').css('cursor', 'move');
+    $('.connectedSortable .box-header').css('cursor', 'move');
+    $('#' + id).find('.sk-circle').hide();
 }
 refreshSortable();
 
-var formatCards = function(data) {
-    out = '<ul class="col-lg-6 connectedSortable">';
+var cutData = function(data, start) {
+    for (var i=0; i<data.Items.length; i++) {
+        data.Items[i] = data.Items[i].slice(start);
+    }
+}
+
+var createSection = function(id, name) {
+    out = '<div class="col-lg-6 connectedSortable" id="' + id + '">';
+    out += '<h1>' + name + '</h1>'
+    out += '<div class="sk-circle">\
+                <div class="sk-circle1 sk-child"></div>\
+                <div class="sk-circle2 sk-child"></div>\
+                <div class="sk-circle3 sk-child"></div>\
+                <div class="sk-circle4 sk-child"></div>\
+                <div class="sk-circle5 sk-child"></div>\
+                <div class="sk-circle6 sk-child"></div>\
+                <div class="sk-circle7 sk-child"></div>\
+                <div class="sk-circle8 sk-child"></div>\
+                <div class="sk-circle9 sk-child"></div>\
+                <div class="sk-circle10 sk-child"></div>\
+                <div class="sk-circle11 sk-child"></div>\
+                <div class="sk-circle12 sk-child"></div>\
+            </div>'
+    out += '</div>';
+    return out;
+}
+
+var formatCards = function(data, name) {
     items = data.Items;
+    out = '<h1>' + name + '</h1>';
     for (var i=0; i<items.length; i++) {
         start = '<div class="box">';
         icon = '<img class="card-image" src="' + items[i][8] + '">';
@@ -33,7 +61,6 @@ var formatCards = function(data) {
         end = '</div>';
         out += start + icon + mask + body + metacritic + end;
     }
-    out += '';
     return out;
 }
 
@@ -42,8 +69,6 @@ $("#Dashboard").click(function(e) {
     $("#Library").removeClass('active');
     $("#Games").removeClass('active');
     $("#Discover").removeClass('active');
-
-    $("#Title").text("Dashboard");
 
     $("#content").html("");
 });
@@ -54,33 +79,55 @@ $("#Library").click(function(e) {
     $("#Games").removeClass('active');
     $("#Discover").removeClass('active');
 
-    $("#Title").text("Library");
+    $('.sk-circle').show();
+    
+    var sec1Id = 'mygames'
+    var sec2Id = 'other'
+    var sec1 = createSection(sec1Id, 'My Games');
+    var sec2 = createSection(sec2Id, 'Other Games');
+    
+    $("#content").html(sec1 + sec2);
 
-    $.getJSON('http://97.79.174.132:5000/GetJoinedRowsOrdered', {
+    $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
         email: 'rmkeezer@yahoo.com',
-        password: 'smoothie42',
+        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
         table1: 'usergames',
         table2: 'games',
+        join1: 'game_id',
+        join2: 'Id',
+        joinType: 'INNER',
+        null: 'user_id',
+        neg: 'NOT',
+        offset: '0',
         numRows: '10',
-        order: 'Id',
+        order: 'metacritic',
         dir: 'DESC'
     }, function(data) {
-        out = formatCards(data);
-        $("#content").html(out);
-        refreshSortable();
+        cutData(data, 2);
+        out = formatCards(data, 'My Games');
+        $("#" + sec1Id).html(out);
+        refreshSortable(sec1Id);
     });
 
-    $.getJSON('http://97.79.174.132:5000/GetRowsOrdered', {
+    $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
         email: 'rmkeezer@yahoo.com',
-        password: 'smoothie42',
-        tableName: 'games',
+        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
+        table1: 'usergames',
+        table2: 'games',
+        join1: 'game_id',
+        join2: 'Id',
+        joinType: 'RIGHT',
+        null: 'user_id',
+        neg: '',
+        offset: '0',
         numRows: '10',
-        order: 'Id',
+        order: 'metacritic',
         dir: 'DESC'
     }, function(data) {
-        out = formatCards(data);
-        $("#content").html($("#content").html() + out);
-        refreshSortable();
+        cutData(data, 2);
+        out = formatCards(data, 'Other Games');
+        $("#" + sec2Id).html(out);
+        refreshSortable(sec2Id);
     });
 });
 
@@ -90,17 +137,21 @@ $("#Games").click(function(e) {
     $("#Games").addClass('active');
     $("#Discover").removeClass('active');
 
-    $("#Title").text("Games");
+    var sec1Id = 'games'
+    var sec1 = createSection(sec1Id, 'All Games');
+    
+    $("#content").html(sec1);
 
-    $.getJSON('http://97.79.174.132:5000/GetRows', {
+    $.getJSON('http://97.79.174.131:5000/GetRows', {
         email: 'rmkeezer@yahoo.com',
-        password: 'smoothie42',
+        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
         tableName: 'games',
+        offset: '0',
         numRows: '10'
     }, function(data) {
-        out = formatCards(data);
-        $("#content").html(out);
-        refreshSortable();
+        out = formatCards(data, 'All Games');
+        $("#" + sec1Id).html(out);
+        refreshSortable(sec1Id);
     });
 });
 
@@ -110,16 +161,20 @@ $("#Discover").click(function(e) {
     $("#Games").removeClass('active');
     $("#Discover").addClass('active');
 
-    $("#Title").text("Discover");
+    var sec1Id = 'random'
+    var sec1 = createSection(sec1Id, 'Random Games');
+    
+    $("#content").html(sec1);
 
-    $.getJSON('http://97.79.174.132:5000/GetXRandRows', {
+    $.getJSON('http://97.79.174.131:5000/GetXRandRows', {
         email: 'rmkeezer@yahoo.com',
-        password: 'smoothie42',
+        password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
         tableName: 'games',
+        offset: '0',
         numRows: '10'
     }, function(data) {
-        out = formatCards(data);
-        $("#content").html(out);
-        refreshSortable();
+        out = formatCards(data, 'Random Games');
+        $("#" + sec1Id).html(out);
+        refreshSortable(sec1Id);
     });
 });
