@@ -39,8 +39,8 @@ var createSection = function(id, name) {
     out = '<div class="col-lg-6">'
     out += '<h1>' + name + '</h1>'
     out += '<div class="order"><select class="form-control" id="order' + id + '">\
-                <option value="mdesc">Metacritic (desc)</option>\
-                <option value="masc">Metacritic (asc)</option>\
+                <option value="metacritic DESC">Metacritic (desc)</option>\
+                <option value="metacritic ASC">Metacritic (asc)</option>\
             </select></div>'
     out += '<div class="connectedSortable" id="' + id + '">';
     out += loadingCircle();
@@ -82,19 +82,28 @@ var createPage = function(data, start, end, id, name, pageListener) {
     out = formatCards(data, name);
     $("#" + id).html(out);
     refreshSortable(id);
+    var order = $("#order" + id).val().split(' ');
     $("#next" + id).unbind('click');
     $("#next" + id).click(function(e) {
         $("#" + id).html(loadingCircle());
-        pageListener(start + end, end, id, name);
+        pageListener(start + end, end, id, name, order[0], order[1]);
     });
     $("#prev" + id).unbind('click');
     $("#prev" + id).click(function(e) {
+        if (start > 0) {
+            $("#" + id).html(loadingCircle());
+            pageListener(start - end, end, id, name, order[0], order[1]);
+        }
+    });
+    $("#order" + id).unbind('change');
+    $("#order" + id).on('change', function() {
         $("#" + id).html(loadingCircle());
-        pageListener(start - end, end, id, name);
+        var order = this.value.split(' ');
+        pageListener(start, end, id, name, order[0], order[1]);
     });
 }
 
-var getOtherGames = function(start, end, id, name) {
+var getOtherGames = function(start, end, id, name, order='metacritic', dir='DESC') {
     $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
         email: 'rmkeezer@yahoo.com',
         password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
@@ -107,15 +116,15 @@ var getOtherGames = function(start, end, id, name) {
         neg: '',
         offset: start.toString(),
         numRows: end.toString(),
-        order: 'metacritic',
-        dir: 'DESC'
+        order: order,
+        dir: dir
     }, function(data) {
         cutData(data, 2);
         createPage(data, start, end, id, name, getOtherGames);
     });
 }
 
-var getMyGames = function(start, end, id, name) {
+var getMyGames = function(start, end, id, name, order='metacritic', dir='DESC') {
     $.getJSON('http://97.79.174.131:5000/GetJoinedRowsOrdered', {
         email: 'rmkeezer@yahoo.com',
         password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
@@ -128,22 +137,26 @@ var getMyGames = function(start, end, id, name) {
         neg: 'NOT',
         offset: start.toString(),
         numRows: end.toString(),
-        order: 'metacritic',
-        dir: 'DESC'
+        order: order,
+        dir: dir
     }, function(data) {
         cutData(data, 2);
         createPage(data, start, end, id, name, getMyGames);
     });
 }
 
-var getGames = function(start, end, id, name) {
-    $.getJSON('http://97.79.174.131:5000/GetRows', {
+var getGames = function(start, end, id, name, order='metacritic', dir='DESC') {
+    $.getJSON('http://97.79.174.131:5000/GetRowsOrdered', {
         email: 'rmkeezer@yahoo.com',
         password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
         tableName: 'games',
         offset: start.toString(),
-        numRows: end.toString()
+        numRows: end.toString(),
+        order: order,
+        dir: dir
     }, function(data) {
+        console.log(data);
+        console.log(start);
         createPage(data, start, end, id, name, getGames);
     });
 }
