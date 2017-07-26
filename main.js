@@ -1,3 +1,5 @@
+currentUser_id = '1';
+oldMyGames = [];
 
 var refreshSortable = function(id) {
     $(".connectedSortable").sortable({
@@ -6,6 +8,39 @@ var refreshSortable = function(id) {
         handle: ".box-header",
         forcePlaceholderSize: true,
         zIndex: 999999
+    });
+    $('#mygames').bind("DOMSubtreeModified",function() {
+        ids = $.map($(this).find(".card-id"), function (div) {
+            return div.innerHTML
+        });
+        if (Math.abs(oldMyGames.length-ids.length) == 1) {
+            let a = new Set(oldMyGames);
+            let b = new Set(ids);
+            var id = [...b].filter(x => !a.has(x))[0];
+            if (id) {
+                $.post('http://97.79.174.131:5000/AddRow', {
+                    email: 'rmkeezer@yahoo.com',
+                    password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
+                    name: 'usergames',
+                    argnames: 'user_idzgame_id',
+                    argvals: currentUser_id + 'z' + id
+                }, function(data) {
+                    console.log(data);
+                }, 'json');
+            } else {
+                id = [...a].filter(x => !b.has(x))[0];
+                $.post('http://97.79.174.131:5000/RemoveRow', {
+                    email: 'rmkeezer@yahoo.com',
+                    password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
+                    name: 'usergames',
+                    argnames: 'user_idzgame_id',
+                    argvals: currentUser_id + 'z' + id
+                }, function(data) {
+                    console.log(data);
+                }, 'json');
+            }
+            oldMyGames = ids;
+        }
     });
     $('.connectedSortable .box-header').css('cursor', 'move');
     $('#' + id).find('.sk-circle').hide();
@@ -58,6 +93,7 @@ var formatCards = function(data, name) {
     out = '';
     for (var i=0; i<items.length; i++) {
         start = '<div class="box">';
+        id = '<div class="card-id" hidden="True">' + items[i][0] + '</div>';
         icon = '<img class="card-image" src="' + items[i][8] + '">';
         //icon = '<img src="' + items[i][8] + '">'
         mask = '<div class="card-mask"></div>'
@@ -73,7 +109,7 @@ var formatCards = function(data, name) {
                         + '</div>';
         }
         end = '</div>';
-        out += start + icon + mask + body + metacritic + end;
+        out += start + id + icon + mask + body + metacritic + end;
     }
     return out;
 }
@@ -141,6 +177,7 @@ var getMyGames = function(start, end, id, name, order='metacritic', dir='DESC') 
         dir: dir
     }, function(data) {
         cutData(data, 2);
+        oldMyGames = data.Items.map(function(x) { return x[0].toString() });
         createPage(data, start, end, id, name, getMyGames);
     });
 }
@@ -155,8 +192,6 @@ var getGames = function(start, end, id, name, order='metacritic', dir='DESC') {
         order: order,
         dir: dir
     }, function(data) {
-        console.log(data);
-        console.log(start);
         createPage(data, start, end, id, name, getGames);
     });
 }
