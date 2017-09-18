@@ -10,19 +10,28 @@ var refreshSortable = function(id) {
         zIndex: 999999
     });
     $('#mygames').bind("DOMSubtreeModified",function() {
-        ids = $.map($(this).find(".card-id"), function (div) {
+        var cardArr = $(this).find(".card-id");
+        ids = $.map(cardArr, function (div) {
             return div.innerHTML
         });
         if (Math.abs(oldMyGames.length-ids.length) == 1) {
             let a = new Set(oldMyGames);
             let b = new Set(ids);
             var id = [...b].filter(x => !a.has(x))[0];
+            var current = cardArr.filter(':contains("' + id + '")');
+            var neighbor = cardArr[cardArr.index(current) + 1]
+            if (neighbor) {
+                bump = neighbor.innerHTML
+            } else {
+                bump = ''
+            }
             if (id) {
                 $.post('http://127.0.0.1:5000/AddGame', {
                     email: 'rmkeezer@yahoo.com',
                     password: '2A459254CB7C141920285242B47E01722AAE4A0D2945F53E45CE4E9BD743E841493FFEFAE15767AC0287F9C695566AC98ED4A38A65EF65649B0938A53A533971',
                     userId: currentUser_id,
-                    gameId: id
+                    gameId: id,
+                    bumpId: bump
                 }, function(data) {
                     console.log(data);
                 }, 'json');
